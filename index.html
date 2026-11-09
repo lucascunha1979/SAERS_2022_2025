@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta
+        name="description"
+        content="Painel histórico do Sistema de Avaliação do Rendimento Escolar do Rio Grande do Sul — SAERS, 2022 a 2025."
+    >
+    <title>SAERS — Painel Histórico 2022–2025</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+<div id="loading-global" class="loading-global">
+    <div class="loading-card">
+        <div class="spinner"></div>
+        <strong>Carregando SAERS</strong>
+        <span>Preparando dados e mapas...</span>
+    </div>
+</div>
+
+<header class="cabecalho">
+    <div class="cabecalho-conteudo">
+
+        <div class="marca">
+            <div class="marca-simbolo">
+                <span></span><span></span><span></span><span></span>
+            </div>
+
+            <div>
+                <div class="marca-linha">
+                    <strong class="marca-saers">SAERS</strong>
+                    <span class="marca-divisor"></span>
+                    <strong class="marca-painel">Painel da Educação</strong>
+                </div>
+
+                <p>
+                    Sistema de Avaliação do Rendimento Escolar do Rio Grande do Sul
+                </p>
+            </div>
+        </div>
+
+        <div class="cabecalho-acoes">
+            <button
+                id="btn-animar"
+                class="btn-animar"
+                type="button"
+                title="Animar os resultados de 2022 a 2025"
+            >
+                <span class="icone-play">▶</span>
+                <span id="texto-animar">Animar 2022–2025</span>
+            </button>
+        </div>
+
+    </div>
+</header>
+
+<main class="conteudo">
+
+    <section class="filtros">
+
+        <div class="filtro">
+            <label for="filtro-ano">Ano</label>
+            <select id="filtro-ano">
+                <option value="2022">2022</option>
+                <option value="2023">2023</option>
+                <option value="2024">2024</option>
+                <option value="2025" selected>2025</option>
+            </select>
+        </div>
+
+        <div class="filtro">
+            <label for="filtro-disciplina">Disciplina</label>
+            <select id="filtro-disciplina">
+                <option value="LP" selected>Língua Portuguesa</option>
+                <option value="MT">Matemática</option>
+            </select>
+        </div>
+
+        <div class="filtro">
+            <label for="filtro-etapa">Etapa</label>
+            <select id="filtro-etapa">
+                <option value="2EF" selected>2º ano do Ensino Fundamental</option>
+                <option value="5EF">5º ano do Ensino Fundamental</option>
+                <option value="9EF">9º ano do Ensino Fundamental</option>
+                <option value="3EM">3ª série do Ensino Médio</option>
+            </select>
+        </div>
+
+        <div class="filtro">
+            <label for="filtro-rede">Rede</label>
+            <select id="filtro-rede">
+                <option value="T">Todas</option>
+                <option value="E" selected>Estadual</option>
+                <option value="M">Municipal</option>
+            </select>
+        </div>
+
+        <div class="filtro">
+            <label for="filtro-local">Localização</label>
+            <select id="filtro-local">
+                <option value="T" selected>Todas</option>
+                <option value="U">Urbana</option>
+                <option value="R">Rural</option>
+            </select>
+        </div>
+
+        <div class="filtro filtro-indicador">
+            <label for="filtro-indicador">Indicador do mapa/ranking</label>
+            <select id="filtro-indicador">
+                <option value="pmx" selected>Proficiência média</option>
+                <option value="ppx">Participação</option>
+                <option value="pabx">Abaixo do Básico</option>
+                <option value="pbx">Básico</option>
+                <option value="padx">Adequado</option>
+                <option value="pavx">Avançado</option>
+            </select>
+        </div>
+
+    </section>
+
+    <nav class="abas" aria-label="Abrangência territorial">
+        <button class="aba ativa" data-aba="estado" type="button">Estado</button>
+        <button class="aba" data-aba="cre" type="button">CRE</button>
+        <button class="aba" data-aba="municipio" type="button">Municípios</button>
+        <button class="aba" data-aba="escola" type="button">Escolas</button>
+    </nav>
+
+    <section id="aba-estado" class="painel-aba ativa">
+
+        <div class="titulo-contexto">
+            <div>
+                <span class="contexto-kicker">Abrangência estadual</span>
+                <h1>Rio Grande do Sul</h1>
+                <p id="descricao-selecao">—</p>
+            </div>
+
+            <div id="badge-status-dados" class="badge-dados">—</div>
+        </div>
+
+        <section class="cards">
+
+            <article class="card-kpi">
+                <span class="card-label">Proficiência média</span>
+                <strong id="card-prof">—</strong>
+                <span id="card-prof-padrao" class="card-rodape">—</span>
+            </article>
+
+            <article class="card-kpi">
+                <span class="card-label">Participação</span>
+                <strong id="card-part">—</strong>
+                <span class="card-rodape">efetivos / previstos</span>
+            </article>
+
+            <article class="card-kpi">
+                <span class="card-label">Previstos</span>
+                <strong id="card-prev">—</strong>
+                <span class="card-rodape">estudantes</span>
+            </article>
+
+            <article class="card-kpi">
+                <span class="card-label">Efetivos</span>
+                <strong id="card-efet">—</strong>
+                <span class="card-rodape">estudantes</span>
+            </article>
+
+            <article class="card-kpi">
+                <span class="card-label">Padrão médio</span>
+                <strong id="card-padrao" class="texto-card">—</strong>
+                <span class="card-rodape">classificação da média</span>
+            </article>
+
+            <article id="card-meta-container" class="card-kpi card-meta">
+                <span class="card-label">Meta 2027</span>
+                <strong id="card-meta">—</strong>
+                <span id="card-meta-status" class="card-rodape">—</span>
+            </article>
+
+        </section>
+
+        <section class="grade-principal">
+
+            <article class="bloco">
+
+                <div class="bloco-cabecalho">
+                    <div>
+                        <span class="bloco-kicker">Território</span>
+                        <h2>Rio Grande do Sul</h2>
+                    </div>
+
+                    <span class="bloco-info">497 municípios</span>
+                </div>
+
+                <div id="mapa-estado" class="mapa"></div>
+
+            </article>
+
+            <article class="bloco">
+
+                <div class="bloco-cabecalho">
+                    <div>
+                        <span class="bloco-kicker">Desempenho</span>
+                        <h2>Percentual de estudantes por padrão</h2>
+                    </div>
+
+                    <span class="bloco-info">evolução 2022–2025</span>
+                </div>
+
+                <div id="grafico-desempenho" class="grafico"></div>
+
+            </article>
+
+        </section>
+
+        <section class="bloco bloco-largo">
+
+            <div class="bloco-cabecalho">
+                <div>
+                    <span class="bloco-kicker">Série histórica</span>
+                    <h2>Evolução da proficiência e participação</h2>
+                </div>
+
+                <span id="historico-meta-info" class="bloco-info"></span>
+            </div>
+
+            <div id="grafico-historico" class="grafico grafico-historico"></div>
+
+        </section>
+
+        <section class="bloco">
+
+            <div class="bloco-cabecalho">
+                <div>
+                    <span class="bloco-kicker">Ano selecionado</span>
+                    <h2>Composição do desempenho</h2>
+                </div>
+            </div>
+
+            <div class="padroes-cards">
+
+                <div class="padrao-item abaixo">
+                    <span>Abaixo do Básico</span>
+                    <strong id="pct-abaixo">—</strong>
+                </div>
+
+                <div class="padrao-item basico">
+                    <span>Básico</span>
+                    <strong id="pct-basico">—</strong>
+                </div>
+
+                <div class="padrao-item adequado">
+                    <span>Adequado</span>
+                    <strong id="pct-adequado">—</strong>
+                </div>
+
+                <div class="padrao-item avancado">
+                    <span>Avançado</span>
+                    <strong id="pct-avancado">—</strong>
+                </div>
+
+            </div>
+
+        </section>
+
+    </section>
+
+    <section id="aba-cre" class="painel-aba">
+
+        <div class="titulo-contexto">
+            <div>
+                <span class="contexto-kicker">Abrangência regional</span>
+                <h1>Coordenadorias Regionais de Educação</h1>
+                <p>30 CREs — mapa, ranking, cards e série histórica.</p>
+            </div>
+        </div>
+
+        <div class="aviso-proxima-etapa">
+            <strong>Estrutura preparada</strong>
+            <p>
+                Na próxima etapa conectaremos os 30 territórios,
+                ranking com rolagem, seleção por mapa e histórico da CRE selecionada.
+            </p>
+        </div>
+
+        <section class="grade-principal">
+
+            <article class="bloco placeholder">
+                <span>Mapa das 30 CREs</span>
+            </article>
+
+            <article class="bloco placeholder">
+                <span>Ranking das CREs</span>
+            </article>
+
+        </section>
+
+    </section>
+
+    <section id="aba-municipio" class="painel-aba">
+
+        <div class="titulo-contexto">
+            <div>
+                <span class="contexto-kicker">Abrangência municipal</span>
+                <h1>Municípios</h1>
+                <p>Os 497 municípios permanecerão sempre visíveis no mapa.</p>
+            </div>
+        </div>
+
+        <div class="aviso-proxima-etapa">
+            <strong>Estrutura preparada</strong>
+            <p>
+                O próximo módulo conectará mapa coroplético,
+                ranking municipal com rolagem e histórico do município selecionado.
+            </p>
+        </div>
+
+        <section class="grade-principal">
+
+            <article class="bloco placeholder">
+                <span>Mapa dos 497 municípios</span>
+            </article>
+
+            <article class="bloco placeholder">
+                <span>Ranking municipal</span>
+            </article>
+
+        </section>
+
+    </section>
+
+    <section id="aba-escola" class="painel-aba">
+
+        <div class="titulo-contexto">
+            <div>
+                <span class="contexto-kicker">Abrangência escolar</span>
+                <h1>Escolas</h1>
+                <p>
+                    5.176 escolas georreferenciadas e filtros temporais
+                    de rede e localização.
+                </p>
+            </div>
+        </div>
+
+        <div class="aviso-proxima-etapa">
+            <strong>Estrutura preparada</strong>
+            <p>
+                A dimensão escola × ano permitirá filtrar corretamente
+                rede e localização sem duplicar os resultados escolares.
+            </p>
+        </div>
+
+        <section class="grade-principal">
+
+            <article class="bloco placeholder">
+                <span>Mapa de pontos das escolas</span>
+            </article>
+
+            <article class="bloco placeholder">
+                <span>Ranking das escolas</span>
+            </article>
+
+        </section>
+
+    </section>
+
+    <section class="fonte-box">
+
+        <div>
+            <strong>Fonte dos dados</strong>
+            <p>
+                Secretaria de Estado da Educação do Rio Grande do Sul —
+                Sistema de Avaliação do Rendimento Escolar do Rio Grande do Sul (SAERS),
+                edições 2022–2025.
+            </p>
+        </div>
+
+        <a
+            href="https://dados.rs.gov.br/dataset/dados-sistema-de-avaliacao-do-rendimento-escolar-do-rio-grande-do-sul-saers"
+            target="_blank"
+            rel="noopener noreferrer"
+        >
+            Dados oficiais do SAERS ↗
+        </a>
+
+    </section>
+
+    <footer class="rodape">
+
+        <p>
+            Painel derivado dos microdados oficiais do SAERS.
+            Resultados reconstruídos e auditados para análise histórica e territorial.
+        </p>
+
+        <p>
+            Meta 2027 apresentada exclusivamente como referência estadual
+            da Rede Estadual, conforme o escopo metodológico adotado.
+        </p>
+
+    </footer>
+
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
