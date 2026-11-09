@@ -1,0 +1,110 @@
+name: Importar pacote SAERS
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'SAERS_GITHUB_PAGES_FINAL.zip'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  importar:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar repositório
+        uses: actions/checkout@v4
+
+      - name: Verificar ZIP
+        id: check
+        shell: bash
+        run: |
+          if [ -f "SAERS_GITHUB_PAGES_FINAL.zip" ]; then
+            echo "existe=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "existe=false" >> "$GITHUB_OUTPUT"
+            echo "ZIP não está presente. Nenhuma importação necessária."
+          fi
+
+      - name: Extrair pacote
+        if: steps.check.outputs.existe == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf _saers_import
+          mkdir _saers_import
+          unzip -q SAERS_GITHUB_PAGES_FINAL.zip -d _saers_import
+
+          echo "Arquivos extraídos:"
+          find _saers_import -type f | sort
+
+          cp -a _saers_import/. .
+          rm -rf _saers_import
+          rm -f SAERS_GITHUB_PAGES_FINAL.zip
+
+      - name: Validar publicação
+        if: steps.check.outputs.existe == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          test -f index.html
+          test -f styles.css
+          test -f app.js
+          test -f .nojekyll
+          test -f dados/manifest.json
+          test -f dados/schemas.json
+          test -f dados/metadados.json
+          test -f mapas/cres_rs_saers.geojson
+          test -f mapas/municipios_rs_saers.geojson
+          test -f mapas/escolas_rs_saers.geojson
+
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          p = Path("dados/manifest.json")
+          m = json.loads(p.read_text(encoding="utf-8"))
+
+          assert m["versao"] == "06B.3"
+          assert int(m["total_registros"]) == 200149
+          assert int(m["total_arquivos_analiticos"]) == 16
+          assert int(m["dimensao_escola_ano"]["total_registros"]) == 18638
+          assert int(m["dimensao_escola_ano"]["total_escolas"]) == 5176
+
+          faltantes = []
+          for item in m["arquivos"]:
+              if not Path(item["arquivo"]).exists():
+                  faltantes.append(item["arquivo"])
+
+          for item in m["dimensao_escola_ano"]["arquivos"]:
+              if not Path(item["arquivo"]).exists():
+                  faltantes.append(item["arquivo"])
+
+          assert not faltantes, faltantes
+
+          print("VALIDACAO_SAERS_OK: True")
+          PY
+
+      - name: Publicar arquivos extraídos
+        if: steps.check.outputs.existe == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add -A
+
+          if git diff --cached --quiet; then
+            echo "Nenhuma alteração para publicar."
+            exit 0
+          fi
+
+          git commit -m "Importa pacote completo SAERS 2022-2025"
+          git push
