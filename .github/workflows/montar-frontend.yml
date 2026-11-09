@@ -1,0 +1,53 @@
+name: Montar frontend SAERS
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'frontend_parts/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  montar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verificar partes
+        id: check
+        shell: bash
+        run: |
+          if [ -f frontend_parts/app_part_01.txt ]; then
+            echo "montar=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "montar=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Montar app.js
+        if: steps.check.outputs.montar == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat frontend_parts/app_part_*.txt > app.js
+          node --check app.js
+          python - <<'PY'
+          from pathlib import Path
+          p=Path("app.js")
+          assert p.stat().st_size > 20000
+          s=p.read_text(encoding="utf-8")
+          for termo in ["linhasFiltradas","atualizarMapa","renderRanking","graficoDesempenho","garantirMapaEscolas"]:
+              assert termo in s, termo
+          print("FRONTEND_SAERS_VALIDADO: True")
+          PY
+          rm -rf frontend_parts
+      - name: Publicar frontend montado
+        if: steps.check.outputs.montar == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Conecta mapas, rankings e abas territoriais do SAERS"
+          git push
