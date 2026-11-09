@@ -1,0 +1,3 @@
+async function garantirMapaEscolas(){if(!CACHE.mapas.escolas)CACHE.mapas.escolas=await fetchJSON("mapas/escolas_rs_saers.geojson")}
+const atualizarTudoOriginal=atualizarTudo;atualizarTudo=async function(){if(STATE.tab==="escola")await garantirMapaEscolas();return atualizarTudoOriginal()};
+window.addEventListener("DOMContentLoaded",inicializar);
