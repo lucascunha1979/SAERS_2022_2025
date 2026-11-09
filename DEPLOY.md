@@ -35,3 +35,8 @@ A camada analítica web contém:
 - 2022–2025
 
 A publicação utiliza a versão matricial V3, validada como lossless.
+
+
+## Versão do frontend
+
+Frontend 07D1 — mapas, rankings, abas territoriais e animação 2022–2025.
