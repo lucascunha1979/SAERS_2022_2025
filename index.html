@@ -6,7 +6,7 @@
   <meta name="description" content="Painel histórico e territorial do Sistema de Avaliação do Rendimento Escolar do Rio Grande do Sul — SAERS, 2022 a 2025.">
   <title>SAERS — Painel Histórico 2022–2025</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <link rel="stylesheet" href="styles.css?v=07D2">
+  <link rel="stylesheet" href="styles.css?v=07D3">
 </head>
 <body>
   <div id="loading-global" class="loading-global">
@@ -109,7 +109,7 @@
       <article class="bloco bloco-mapa">
         <div class="bloco-cabecalho">
           <div><span class="bloco-kicker">Território</span><h2 id="mapa-titulo">Distribuição espacial</h2></div>
-          <span id="mapa-contagem" class="bloco-info">—</span>
+          <div class="bloco-meta"><span id="mapa-contagem" class="bloco-info">—</span><span id="mapa-ano" class="ano-badge">2025</span></div>
         </div>
         <div id="mapa-principal" class="mapa"></div>
       </article>
@@ -128,7 +128,7 @@
       <article class="bloco">
         <div class="bloco-cabecalho">
           <div><span class="bloco-kicker">Desempenho</span><h2 id="desempenho-titulo">Percentual de estudantes por padrão</h2></div>
-          <span id="desempenho-info" class="bloco-info">—</span>
+          <div class="bloco-meta"><span id="desempenho-info" class="bloco-info">—</span><span id="desempenho-ano" class="ano-badge">2025</span></div>
         </div>
         <div id="grafico-desempenho" class="grafico"></div>
       </article>
@@ -145,7 +145,7 @@
     <section class="bloco bloco-padroes">
       <div class="bloco-cabecalho">
         <div><span class="bloco-kicker">Ano selecionado</span><h2>Composição do desempenho</h2></div>
-        <span id="padroes-unidade" class="bloco-info">—</span>
+        <div class="bloco-meta"><span id="padroes-unidade" class="bloco-info">—</span><span id="padroes-ano" class="ano-badge">2025</span></div>
       </div>
       <div class="padroes-cards">
         <div class="padrao-item abaixo"><span>Abaixo do Básico</span><strong id="pct-abaixo">—</strong></div>
@@ -155,12 +155,16 @@
       </div>
     </section>
 
-    <section class="fonte-box">
+    <section class="fonte-box fonte-box-multipla">
       <div>
-        <strong>Fonte dos dados</strong>
+        <strong>Fontes dos dados</strong>
         <p>Secretaria de Estado da Educação do Rio Grande do Sul — Sistema de Avaliação do Rendimento Escolar do Rio Grande do Sul (SAERS), edições 2022–2025.</p>
+        <p><strong>Metas KPI 2027:</strong> Plano Plurianual 2024–2027 do Estado do Rio Grande do Sul — Secretaria de Planejamento, Governança e Gestão, 2023.</p>
       </div>
-      <a href="https://dados.rs.gov.br/dataset/dados-sistema-de-avaliacao-do-rendimento-escolar-do-rio-grande-do-sul-saers" target="_blank" rel="noopener noreferrer">Dados oficiais do SAERS ↗</a>
+      <div class="fonte-links">
+        <a href="https://dados.rs.gov.br/dataset/dados-sistema-de-avaliacao-do-rendimento-escolar-do-rio-grande-do-sul-saers" target="_blank" rel="noopener noreferrer">Dados oficiais do SAERS ↗</a>
+        <a href="https://planejamento.rs.gov.br/upload/arquivos/202311/28172943-mensagem-ppa-2024-2027-pos-emenda-28112023-final-1.pdf" target="_blank" rel="noopener noreferrer">PPA 2024–2027 ↗</a>
+      </div>
     </section>
 
     <footer class="rodape">
@@ -171,6 +175,6 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
-  <script src="app.js?v=07D2"></script>
+  <script src="app.js?v=07D3"></script>
 </body>
 </html>
