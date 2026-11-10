@@ -74,19 +74,60 @@ function renderRanking(rows,nivel){ultimoRanking=rows.slice().filter(r=>Number.i
 function scrollRankingSelecionado(){const el=document.querySelector('.ranking-item.ativo');if(el)el.scrollIntoView({block:"nearest"})}
 
 function contextoTab(){if(STATE.tab==="estado")return{kick:"Abrangência estadual",titulo:"Rio Grande do Sul",mapa:"Distribuição municipal dos resultados",rank:"Ranking municipal — visão estadual",nivelRank:"MUNICIPIO"};if(STATE.tab==="cre")return{kick:"Abrangência regional",titulo:idSelecionado()?nomeNivel("CRE",idSelecionado()):"Coordenadorias Regionais de Educação",mapa:"30 Coordenadorias Regionais de Educação",rank:"Ranking das CREs",nivelRank:"CRE"};if(STATE.tab==="municipio")return{kick:"Abrangência municipal",titulo:idSelecionado()?nomeNivel("MUNICIPIO",idSelecionado()):"Municípios do Rio Grande do Sul",mapa:"497 municípios",rank:"Ranking dos municípios",nivelRank:"MUNICIPIO"};return{kick:"Abrangência escolar",titulo:idSelecionado()?nomeNivel("ESCOLA",idSelecionado()):"Escolas",mapa:"5.176 escolas georreferenciadas",rank:"Ranking das escolas",nivelRank:"ESCOLA"}}
-function atualizarContexto(){const c=contextoTab();document.getElementById("contexto-kicker").textContent=c.kick;document.getElementById("contexto-titulo").textContent=c.titulo;document.getElementById("contexto-subtitulo").textContent=`${STATE.ano} · ${CONFIG.disciplinas[STATE.disciplina]} · ${CONFIG.etapas[STATE.etapa]} · ${CONFIG.redes[STATE.rede]} · ${CONFIG.locais[STATE.local]}`;document.getElementById("mapa-titulo").textContent=c.mapa;document.getElementById("ranking-titulo").textContent=c.rank;document.getElementById("ranking-busca").placeholder=STATE.tab==="escola"?"Buscar escola...":STATE.tab==="cre"?"Buscar CRE...":"Buscar município..."}
+function atualizarContexto(){const c=contextoTab();document.getElementById("contexto-kicker").textContent=c.kick;document.getElementById("contexto-titulo").textContent=c.titulo;document.getElementById("contexto-subtitulo").textContent=`${STATE.ano} · ${CONFIG.disciplinas[STATE.disciplina]} · ${CONFIG.etapas[STATE.etapa]} · ${CONFIG.redes[STATE.rede]} · ${CONFIG.locais[STATE.local]}`;document.getElementById("mapa-titulo").textContent=c.mapa;document.getElementById("ranking-titulo").textContent=c.rank;document.getElementById("ranking-busca").placeholder=STATE.tab==="escola"?"Buscar escola...":STATE.tab==="cre"?"Buscar CRE...":"Buscar município...";
+  ["mapa-ano","desempenho-ano","padroes-ano"].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=String(STATE.ano)})}
 
 function limparCards(){["card-prof","card-part","card-prev","card-efet","card-padrao","card-sexto-valor","pct-abaixo","pct-basico","pct-adequado","pct-avancado"].forEach(id=>document.getElementById(id).textContent="—");document.getElementById("card-prof-padrao").textContent="Sem resultado";document.getElementById("card-sexto-rodape").textContent="—";document.getElementById("padroes-unidade").textContent="—"}
 function atualizarCards(r){const badge=document.getElementById("badge-status-dados");if(!r){limparCards();badge.textContent="Sem resultado";badge.classList.add("sem-dados");return}badge.textContent="Resultado disponível";badge.classList.remove("sem-dados");const pad=CONFIG.padroes[r.pmi]??r.pmi??"—";document.getElementById("card-prof").textContent=fmtInt(r.pmx);document.getElementById("card-part").textContent=fmtPct(r.ppx);document.getElementById("card-prev").textContent=fmtInt(r.np);document.getElementById("card-efet").textContent=fmtInt(r.ne);document.getElementById("card-padrao").textContent=pad;document.getElementById("card-prof-padrao").textContent=pad;document.getElementById("pct-abaixo").textContent=fmtPct(r.pabx);document.getElementById("pct-basico").textContent=fmtPct(r.pbx);document.getElementById("pct-adequado").textContent=fmtPct(r.padx);document.getElementById("pct-avancado").textContent=fmtPct(r.pavx);const sexto=document.getElementById("card-sexto");if(STATE.tab==="estado"&&r.m27!==null&&r.m27!==undefined){document.getElementById("card-sexto-label").textContent="Meta 2027";document.getElementById("card-sexto-valor").textContent=fmtInt(r.m27);document.getElementById("card-sexto-rodape").textContent=r.smk??"—";sexto.classList.add("card-meta");sexto.classList.remove("card-alerta")}else{document.getElementById("card-sexto-label").textContent="Variação anual";const v=Number(r.vpa);document.getElementById("card-sexto-valor").textContent=Number.isFinite(v)?`${v>0?"+":""}${fmtNum(v,1)}`:"—";document.getElementById("card-sexto-rodape").textContent="pontos de proficiência";sexto.classList.remove("card-meta");sexto.classList.toggle("card-alerta",Number.isFinite(v)&&v<0)}document.getElementById("padroes-unidade").textContent=STATE.tab==="estado"?"Rio Grande do Sul":nomeNivel(nivelDaAba(),r.id)}
 
 async function garantirSelecao(rows){if(STATE.tab==="estado")return;const atual=idSelecionado();if(atual!==null&&rows.some(r=>String(r.id)===String(atual)))return;const eleg=rows.filter(r=>Number.isFinite(Number(r[STATE.indicador]))).sort((a,b)=>Number(b[STATE.indicador])-Number(a[STATE.indicador]));setSelecionado(eleg.length?String(eleg[0].id):null)}
 
-async function graficoDesempenho(rows,nivel){const top=rows.filter(r=>Number.isFinite(Number(r[STATE.indicador]))).sort((a,b)=>Number(b[STATE.indicador])-Number(a[STATE.indicador])).slice(0,STATE.tab==="escola"?15:12);const x=top.map(r=>nomeNivel(nivel,r.id));const traces=[
-{name:"Abaixo do Básico",y:top.map(r=>r.pab),marker:{color:CORES.abaixo}},
-{name:"Básico",y:top.map(r=>r.pb),marker:{color:CORES.basico}},
-{name:"Adequado",y:top.map(r=>r.pad),marker:{color:CORES.adequado}},
-{name:"Avançado",y:top.map(r=>r.pav),marker:{color:CORES.avancado}}
-].map(t=>({...t,x,type:"bar",hovertemplate:"%{x}<br>%{fullData.name}: %{y:.1f}%<extra></extra>"}));document.getElementById("desempenho-info").textContent=top.length?`${top.length} maiores valores de ${CONFIG.indicadores[STATE.indicador].label}`:"Sem resultados";Plotly.react("grafico-desempenho",traces,{barmode:"stack",margin:{l:45,r:8,t:8,b:112},paper_bgcolor:"rgba(0,0,0,0)",plot_bgcolor:"rgba(0,0,0,0)",font:{family:"Inter,system-ui,sans-serif",size:10,color:"#46535e"},xaxis:{tickangle:-38,automargin:true},yaxis:{range:[0,100],ticksuffix:"%",gridcolor:"#e6eaed",zeroline:false},legend:{orientation:"h",x:0,y:1.08}}, {responsive:true,displaylogo:false,modeBarButtonsToRemove:["lasso2d","select2d"]})}
+async function graficoDesempenho(rows,nivel){
+  let base=[],x=[],info="";
+  if(STATE.tab==="estado"){
+    base=await Promise.all(CONFIG.anos.map(ano=>registroRS(ano)));
+    x=CONFIG.anos.map(String);
+    info="Rio Grande do Sul · evolução 2022–2025";
+  }else{
+    base=rows.filter(r=>Number.isFinite(Number(r[STATE.indicador]))).sort((a,b)=>Number(b[STATE.indicador])-Number(a[STATE.indicador])).slice(0,STATE.tab==="escola"?15:12);
+    x=base.map(r=>nomeNivel(nivel,r.id));
+    info=base.length?`${base.length} maiores valores de ${CONFIG.indicadores[STATE.indicador].label}`:"Sem resultados";
+  }
+
+  const campo=y=>base.map(r=>r?Number(r[y]):null);
+  const traces=[
+    {name:"Abaixo do Básico",y:campo("pab"),marker:{color:CORES.abaixo}},
+    {name:"Básico",y:campo("pb"),marker:{color:CORES.basico}},
+    {name:"Adequado",y:campo("pad"),marker:{color:CORES.adequado}},
+    {name:"Avançado",y:campo("pav"),marker:{color:CORES.avancado}}
+  ].map(t=>({...t,x,type:"bar",hovertemplate:"%{x}<br>%{fullData.name}: %{y:.1f}%<extra></extra>"}));
+
+  document.getElementById("desempenho-info").textContent=info;
+
+  Plotly.react("grafico-desempenho",traces,{
+    barmode:"stack",
+    bargap:STATE.tab==="estado"?.28:.18,
+    margin:{l:45,r:8,t:8,b:STATE.tab==="estado"?58:112},
+    paper_bgcolor:"rgba(0,0,0,0)",
+    plot_bgcolor:"rgba(0,0,0,0)",
+    font:{family:"Inter,system-ui,sans-serif",size:10,color:"#46535e"},
+    xaxis:{
+      tickangle:STATE.tab==="estado"?0:-38,
+      automargin:true,
+      tickfont:{size:STATE.tab==="estado"?12:10}
+    },
+    yaxis:{range:[0,100],ticksuffix:"%",gridcolor:"#e6eaed",zeroline:false},
+    legend:{orientation:"h",x:0,y:1.08},
+    shapes:STATE.tab==="estado"?[{
+      type:"rect",
+      xref:"x",yref:"paper",
+      x0:String(STATE.ano),x1:String(STATE.ano),
+      y0:0,y1:1,
+      line:{color:"#17212b",width:2},
+      fillcolor:"rgba(23,33,43,0)"
+    }]:[]
+  },{responsive:true,displaylogo:false,modeBarButtonsToRemove:["lasso2d","select2d"]});
+}
 
 async function serieHistorica(){const nivel=nivelDaAba(),id=idSelecionado();const rows=[];for(const ano of CONFIG.anos){let r;if(STATE.tab==="estado")r=await registroRS(ano);else{const ls=await linhasFiltradas(nivel,ano);r=ls.find(x=>String(x.id)===String(id))??null}rows.push(r)}return rows}
 async function graficoHistorico(){const nivel=nivelDaAba(),id=idSelecionado();const rows=await serieHistorica();const prof=rows.map(r=>r?Number(r.pm):null),part=rows.map(r=>r?Number(r.pp):null);const traces=[{x:CONFIG.anos,y:prof,name:"Proficiência média",type:"scatter",mode:"lines+markers",line:{color:CORES.prof,width:3},marker:{size:8},hovertemplate:"%{x}<br>Proficiência: %{y:.1f}<extra></extra>"},{x:CONFIG.anos,y:part,name:"Participação",type:"scatter",mode:"lines+markers",yaxis:"y2",line:{color:CORES.part,width:2},marker:{size:7},hovertemplate:"%{x}<br>Participação: %{y:.1f}%<extra></extra>"}];let meta=null;if(STATE.tab==="estado"){for(const r of rows){if(r&&r.m27!==null&&r.m27!==undefined){meta=Number(r.m27);break}}if(meta!==null)traces.push({x:[2022,2025],y:[meta,meta],name:"Meta 2027",type:"scatter",mode:"lines",line:{color:CORES.meta,width:2,dash:"dash"},hovertemplate:`Meta 2027: ${meta}<extra></extra>`})}
@@ -97,8 +138,8 @@ async function atualizarSelecaoSemRecarregarMapa(){atualizarContexto();const r=a
 async function atualizarTudo(){atualizarContexto();const spatialNivel=nivelEspacialDaAba();const spatialRows=await linhasFiltradas(spatialNivel);await garantirSelecao(STATE.tab==="estado"?[]:spatialRows);const c=contextoTab();document.getElementById("mapa-contagem").textContent=STATE.tab==="estado"?"497 municípios":STATE.tab==="cre"?"30 CREs":STATE.tab==="municipio"?"497 municípios":"5.176 escolas";renderRanking(spatialRows,c.nivelRank);await atualizarMapa(spatialRows);await graficoDesempenho(spatialRows,c.nivelRank);const r=await registroSelecionado();atualizarCards(r);await graficoHistorico();atualizarContexto();destacarMapaSelecionado();setTimeout(()=>MAP.invalidateSize(),40)}
 
 function lerFiltros(){STATE.ano=Number(document.getElementById("filtro-ano").value);STATE.disciplina=document.getElementById("filtro-disciplina").value;STATE.etapa=document.getElementById("filtro-etapa").value;STATE.rede=document.getElementById("filtro-rede").value;STATE.local=document.getElementById("filtro-local").value;STATE.indicador=document.getElementById("filtro-indicador").value}
-function pararAnimacao(){if(STATE.timer)clearInterval(STATE.timer);STATE.timer=null;STATE.animando=false;document.getElementById("btn-animar").classList.remove("ativo");document.getElementById("texto-animar").textContent="Animar 2022–2025"}
-function iniciarAnimacao(){if(STATE.animando){pararAnimacao();return}STATE.animando=true;document.getElementById("btn-animar").classList.add("ativo");document.getElementById("texto-animar").textContent="Parar animação";let i=CONFIG.anos.indexOf(STATE.ano);STATE.timer=setInterval(async()=>{i=(i+1)%CONFIG.anos.length;STATE.ano=CONFIG.anos[i];document.getElementById("filtro-ano").value=String(STATE.ano);try{await atualizarTudo()}catch(e){console.error(e)}},1900)}
+function pararAnimacao(){if(STATE.timer)clearInterval(STATE.timer);STATE.timer=null;STATE.animando=false;document.getElementById("btn-animar").classList.remove("ativo");document.getElementById("texto-animar").textContent="Animar 2022–2025";document.querySelectorAll(".ano-badge").forEach(el=>el.classList.remove("animando"))}
+function iniciarAnimacao(){if(STATE.animando){pararAnimacao();return}STATE.animando=true;document.getElementById("btn-animar").classList.add("ativo");document.getElementById("texto-animar").textContent="Parar animação";document.querySelectorAll(".ano-badge").forEach(el=>el.classList.add("animando"));let i=CONFIG.anos.indexOf(STATE.ano);STATE.timer=setInterval(async()=>{i=(i+1)%CONFIG.anos.length;STATE.ano=CONFIG.anos[i];document.getElementById("filtro-ano").value=String(STATE.ano);try{await atualizarTudo()}catch(e){console.error(e)}},1900)}
 
 function eventos(){["filtro-ano","filtro-disciplina","filtro-etapa","filtro-rede","filtro-local","filtro-indicador"].forEach(id=>document.getElementById(id).addEventListener("change",async()=>{pararAnimacao();lerFiltros();STATE.busca="";document.getElementById("ranking-busca").value="";await atualizarTudo()}));document.getElementById("btn-animar").addEventListener("click",iniciarAnimacao);document.querySelectorAll(".aba").forEach(btn=>btn.addEventListener("click",async()=>{pararAnimacao();STATE.tab=btn.dataset.aba;STATE.busca="";document.getElementById("ranking-busca").value="";document.querySelectorAll(".aba").forEach(b=>b.classList.toggle("ativa",b===btn));await atualizarTudo()}));document.getElementById("ranking-busca").addEventListener("input",async e=>{STATE.busca=e.target.value;const nivel=nivelEspacialDaAba();const rows=await linhasFiltradas(nivel);renderRanking(rows,contextoTab().nivelRank)})}
 
